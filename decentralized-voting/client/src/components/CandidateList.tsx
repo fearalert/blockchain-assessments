@@ -1,43 +1,25 @@
 /** @format */
 import { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
-import useWeb3 from '../hooks/useWeb3';
-import { toast } from 'react-toastify';
 import CandidateCard from './CandidateCard';
-
-interface Candidate {
-  name: string;
-  voteCount: number;
-}
+import useWeb3 from '../hooks/useWeb3';
+import {
+  fetchCandidates as getCandidates,
+  Candidate,
+} from '../services/CandidateService';
 
 const CandidateList = () => {
   const { contract } = useWeb3();
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const fetchCandidates = async () => {
+  const loadCandidates = async () => {
     if (!contract) return;
     try {
       setLoading(true);
-      // Use ethers.js to call the contract function getCandidateCount
-      const candidateCountBN = await contract.getCandidateCount();
-      const candidateCount = candidateCountBN.toNumber();
-      const candidateArray: Candidate[] = [];
-      for (let i = 0; i < candidateCount; i++) {
-        // Get candidate bytes from the candidateList mapping
-        const candidateBytes = await contract.candidateList(i);
-        // Convert bytes32 to string
-        const candidateName = ethers.decodeBytes32String(candidateBytes);
-        const voteCountBN = await contract.totalVotesFor(candidateBytes);
-        candidateArray.push({
-          name: candidateName,
-          voteCount: voteCountBN.toNumber(),
-        });
-      }
-      setCandidates(candidateArray);
+      const fetchedCandidates = await getCandidates(contract);
+      setCandidates(fetchedCandidates);
     } catch (error) {
-      console.error('Error fetching candidates:', error);
-      toast.error('Failed to fetch candidates. Please try again later.');
+      console.error('Error loading candidates:', error);
     } finally {
       setLoading(false);
     }
@@ -45,8 +27,8 @@ const CandidateList = () => {
 
   useEffect(() => {
     if (contract) {
-      fetchCandidates();
-      const interval = setInterval(fetchCandidates, 10000);
+      loadCandidates();
+      const interval = setInterval(loadCandidates, 10000);
       return () => clearInterval(interval);
     }
   }, [contract]);
@@ -66,7 +48,7 @@ const CandidateList = () => {
           <CandidateCard
             key={candidate.name}
             candidate={candidate}
-            refreshCandidates={fetchCandidates}
+            refreshCandidates={loadCandidates}
           />
         ))
       )}

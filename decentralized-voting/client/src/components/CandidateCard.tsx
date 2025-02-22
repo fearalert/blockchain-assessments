@@ -27,7 +27,7 @@ const CandidateCard = ({
     try {
       setVoting(true);
       // Convert the candidate name (string) to bytes32 using encodeBytes32String
-      const candidateBytes = ethers.encodeBytes32String(candidate.name);
+      const candidateBytes = ethers.utils.formatBytes32String(candidate.name);
       const tx = await contract.voteForCandidate(candidateBytes);
       await tx.wait();
       toast.success(`Vote cast for ${candidate.name}!`);

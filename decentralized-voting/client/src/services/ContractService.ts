@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import VotingAbi from "../contracts/voting.json";
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
 
 console.log("Contract Address", CONTRACT_ADDRESS)
 
@@ -10,14 +10,14 @@ export const getContractInstance = (signer: ethers.Signer): ethers.Contract => {
 };
 
 export const voteForCandidate = async (contract: ethers.Contract, candidateName: string): Promise<void> => {
-  const candidateBytes = ethers.encodeBytes32String(candidateName);
+  const candidateBytes = ethers.utils.formatBytes32String(candidateName);
   const tx = await contract.voteForCandidate(candidateBytes);
   await tx.wait();
 };
 
 export const getCandidateData = async (contract: ethers.Contract, index: number): Promise<{ name: string; voteCount: number }> => {
   const candidateBytes = await contract.candidateList(index);
-  const name = ethers.decodeBytes32String(candidateBytes);
+  const name = ethers.utils.parseBytes32String(candidateBytes);
   const voteCountBN = await contract.totalVotesFor(candidateBytes);
   return { name, voteCount: voteCountBN.toNumber() };
 };

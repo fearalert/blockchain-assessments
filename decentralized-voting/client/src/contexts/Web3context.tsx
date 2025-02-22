@@ -2,10 +2,11 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { ethers } from 'ethers';
 import VotingAbi from '../contracts/voting.json';
+import { toast } from 'react-toastify';
 
 // Define the context type
 export interface Web3ContextType {
-  provider: ethers.BrowserProvider | null;
+  provider: ethers.providers.Web3Provider | null;
   contract: ethers.Contract | null;
   walletAddress: string | null;
   connectWallet: () => Promise<void>;
@@ -21,18 +22,30 @@ interface Web3ProviderProps {
 }
 
 export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
-  const [provider, setProvider] = useState<ethers.BrowserProvider | null>(null);
+  const [provider, setProvider] =
+    useState<ethers.providers.Web3Provider | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
 
-  // Function to connect wallet and initialize the contract
   const connectWallet = async () => {
     if (typeof window !== 'undefined' && (window as any).ethereum) {
       try {
-        // Use ethers.BrowserProvider from ethers v6 (if using ethers v5, use ethers.providers.Web3Provider)
-        const _provider = new ethers.BrowserProvider((window as any).ethereum);
+        const _provider = new ethers.providers.Web3Provider(
+          (window as any).ethereum
+        );
         await _provider.send('eth_requestAccounts', []);
-        const signer = await _provider.getSigner();
+        const network = await _provider.getNetwork();
+        // Replace with the expected chainId (e.g., 31337 for Hardhat local network)
+        const expectedChainId = 31337;
+        if (network.chainId !== expectedChainId) {
+          toast.error(
+            `Please switch your MetaMask network to the correct network (chainId: ${expectedChainId}).`
+          );
+          return;
+        }
+
+        await _provider.send('eth_requestAccounts', []);
+        const signer = _provider.getSigner();
         const address = await signer.getAddress();
         setProvider(_provider);
         setWalletAddress(address);
@@ -48,6 +61,8 @@ export const Web3Provider: React.FC<Web3ProviderProps> = ({ children }) => {
           VotingAbi.abi,
           signer
         );
+
+        console.log('contract', _contract);
         setContract(_contract);
       } catch (error) {
         console.error('Error connecting wallet:', error);
