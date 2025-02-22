@@ -1,0 +1,13 @@
+# Ignore all .env files
+*.env
+
+# Ignore node_modules folders
+node_modules/
+
+# Ignore .env files in /client and /contracts
+/client/.env
+/contracts/.env
+
+# Ignore node_modules folders in /client and /contracts
+/client/node_modules/
+/contracts/node_modules/
