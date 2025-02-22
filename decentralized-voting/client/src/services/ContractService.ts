@@ -1,7 +1,9 @@
 import { ethers } from "ethers";
 import VotingAbi from "../contracts/voting.json";
 
-const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS;
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || "0x5fbdb2315678afecb367f032d93f642f64180aa3";
+
+console.log("Contract Address", CONTRACT_ADDRESS)
 
 export const getContractInstance = (signer: ethers.Signer): ethers.Contract => {
   return new ethers.Contract(CONTRACT_ADDRESS, VotingAbi.abi, signer);
