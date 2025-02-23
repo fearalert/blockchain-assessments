@@ -10,7 +10,6 @@ Welcome to the Blockchain Assessments repository. This repository contains vario
 - [Getting Started](#getting-started)
 - [Assessments](#assessments)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 
