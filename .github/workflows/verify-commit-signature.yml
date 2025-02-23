@@ -1,10 +1,12 @@
+# @format
+
 name: Verify Commit Signatures
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   verify_commit_signatures:
@@ -17,22 +19,32 @@ jobs:
         run: git fetch --unshallow
 
       - name: Verify commit signatures for all new commits
+        shell: bash
         run: |
-          # Determine the commit range to check. For PRs, compare against the base branch.
+          set -e
+          # Determine the commit range.
           if [ -n "${{ github.event.pull_request.number }}" ]; then
             echo "Pull request detected. Checking commits in PR..."
-            COMMITS=$(git rev-list ${{ github.event.pull_request.base.sha }}..HEAD)
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            COMMITS=$(git rev-list "${BASE_SHA}"..HEAD)
           else
-            echo "Push detected. Checking last commit..."
-            COMMITS=$(git rev-parse HEAD)
+            echo "Push detected. Checking new commits..."
+            # Attempt to compare to the upstream branch.
+            if git rev-parse --verify "@{u}" > /dev/null 2>&1; then
+              COMMITS=$(git rev-list "@{u}"..HEAD)
+            else
+              # Fallback: only check the latest commit.
+              COMMITS=$(git rev-parse HEAD)
+            fi
           fi
 
+          echo "Commits to check: $COMMITS"
           for commit in $COMMITS; do
-            # %G? returns: G (good), B (bad), U (unknown), N (not signed)
-            status=$(git log -1 --format="%G?" $commit)
+            # %G? returns: G (good), B (bad), U (unknown), N (not signed), or E (error)
+            status=$(git log -1 --format="%G?" "$commit")
             echo "Commit $commit signature status: $status"
             if [ "$status" != "G" ]; then
-              echo "Commit $commit is not signed or verified."
+              echo "ERROR: Commit $commit is not signed or verified (status: $status)."
               exit 1
             fi
           done
