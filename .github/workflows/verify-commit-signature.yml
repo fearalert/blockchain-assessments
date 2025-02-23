@@ -1,0 +1,38 @@
+name: Verify Commit Signatures
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify_commit_signatures:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Fetch full history
+        run: git fetch --unshallow
+
+      - name: Verify commit signatures for all new commits
+        run: |
+          # Determine the commit range to check. For PRs, compare against the base branch.
+          if [ -n "${{ github.event.pull_request.number }}" ]; then
+            echo "Pull request detected. Checking commits in PR..."
+            COMMITS=$(git rev-list ${{ github.event.pull_request.base.sha }}..HEAD)
+          else
+            echo "Push detected. Checking last commit..."
+            COMMITS=$(git rev-parse HEAD)
+          fi
+
+          for commit in $COMMITS; do
+            # %G? returns: G (good), B (bad), U (unknown), N (not signed)
+            status=$(git log -1 --format="%G?" $commit)
+            echo "Commit $commit signature status: $status"
+            if [ "$status" != "G" ]; then
+              echo "Commit $commit is not signed or verified."
+              exit 1
+            fi
+          done
