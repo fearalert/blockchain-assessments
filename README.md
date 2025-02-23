@@ -10,7 +10,6 @@ Welcome to the Blockchain Assessments repository. This repository contains vario
 - [Getting Started](#getting-started)
 - [Assessments](#assessments)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Introduction
 
@@ -21,7 +20,7 @@ This repository is designed to help individuals assess their knowledge and skill
 To get started with the assessments, clone this repository to your local machine:
 
 ```bash
-git clone https://github.com/yourusername/blockchain-assessments.git
+git clone https://github.com/fearalert/blockchain-assessments.git
 ```
 
 Navigate to the repository directory:
